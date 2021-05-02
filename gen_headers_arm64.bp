@@ -629,6 +629,8 @@ gen_headers_out_arm64 = [
     "linux/xilinx-v4l2-controls.h",
     "linux/zorro.h",
     "linux/zorro_ids.h",
+    "linux/ncsi.h",
+    "linux/wireguard.h",
     "media/ais_isp.h",
     "media/ais_sensor.h",
     "media/cam_cpas.h",
