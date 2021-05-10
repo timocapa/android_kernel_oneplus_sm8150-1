@@ -728,7 +728,7 @@ KBUILD_CFLAGS	+= -mllvm -polly \
 		   -mllvm -polly-invariant-load-hoisting
 endif
 else
-KBUILD_CFLAGS   += -O2
+KBUILD_CFLAGS   += -O3
 KBUILD_CFLAGS	+= -mcpu=cortex-a76.cortex-a55 -mtune=cortex-a76.cortex-a55
 endif
 endif
