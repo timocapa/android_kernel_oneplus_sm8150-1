@@ -27,7 +27,7 @@
 
 #define __LL_SC_ATOMIC(op)	__LL_SC_CALL(atomic_##op)
 #define ATOMIC_OP(op, asm_op)						\
-static inline void atomic_##op(int i, atomic_t *v)			\
+static __always_inline void atomic_##op(int i, atomic_t *v)			\
 {									\
 	register int w0 asm ("w0") = i;					\
 	register atomic_t *x1 asm ("x1") = v;				\
@@ -52,7 +52,7 @@ ATOMIC_OP(add, stadd)
 #undef ATOMIC_OP
 
 #define ATOMIC_FETCH_OP(name, mb, op, asm_op, cl...)			\
-static inline int atomic_fetch_##op##name(int i, atomic_t *v)		\
+static __always_inline int atomic_fetch_##op##name(int i, atomic_t *v)		\
 {									\
 	register int w0 asm ("w0") = i;					\
 	register atomic_t *x1 asm ("x1") = v;				\
@@ -237,7 +237,7 @@ ATOMIC_FETCH_OP_SUB(        , al, "memory")
 
 #define __LL_SC_ATOMIC64(op)	__LL_SC_CALL(atomic64_##op)
 #define ATOMIC64_OP(op, asm_op)						\
-static inline void atomic64_##op(long i, atomic64_t *v)			\
+static __always_inline void atomic64_##op(long i, atomic64_t *v)			\
 {									\
 	register long x0 asm ("x0") = i;				\
 	register atomic64_t *x1 asm ("x1") = v;				\
@@ -262,7 +262,7 @@ ATOMIC64_OP(add, stadd)
 #undef ATOMIC64_OP
 
 #define ATOMIC64_FETCH_OP(name, mb, op, asm_op, cl...)			\
-static inline long atomic64_fetch_##op##name(long i, atomic64_t *v)	\
+static __always_inline long atomic64_fetch_##op##name(long i, atomic64_t *v)	\
 {									\
 	register long x0 asm ("x0") = i;				\
 	register atomic64_t *x1 asm ("x1") = v;				\
@@ -444,7 +444,7 @@ ATOMIC64_FETCH_OP_SUB(        , al, "memory")
 
 #undef ATOMIC64_FETCH_OP_SUB
 
-static inline long atomic64_dec_if_positive(atomic64_t *v)
+static __always_inline long atomic64_dec_if_positive(atomic64_t *v)
 {
 	register long x0 asm ("x0") = (long)v;
 
@@ -474,7 +474,7 @@ static inline long atomic64_dec_if_positive(atomic64_t *v)
 #define __LL_SC_CMPXCHG(op)	__LL_SC_CALL(__cmpxchg_case_##op)
 
 #define __CMPXCHG_CASE(w, sfx, name, sz, mb, cl...)			\
-static inline u##sz __cmpxchg_case_##name##sz(volatile void *ptr,	\
+static __always_inline u##sz __cmpxchg_case_##name##sz(volatile void *ptr,	\
 					      u##sz old,		\
 					      u##sz new)		\
 {									\
@@ -521,7 +521,7 @@ __CMPXCHG_CASE(x,  ,  mb_, 64, al, "memory")
 #define __LL_SC_CMPXCHG_DBL(op)	__LL_SC_CALL(__cmpxchg_double##op)
 
 #define __CMPXCHG_DBL(name, mb, cl...)					\
-static inline long __cmpxchg_double##name(unsigned long old1,		\
+static __always_inline long __cmpxchg_double##name(unsigned long old1,		\
 					 unsigned long old2,		\
 					 unsigned long new1,		\
 					 unsigned long new2,		\
