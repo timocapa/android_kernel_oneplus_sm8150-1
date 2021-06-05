@@ -525,27 +525,32 @@ void resched_cpu(int cpu)
  */
 int get_nohz_timer_target(void)
 {
-	int i, cpu = smp_processor_id();
+	int i, cpu = smp_processor_id(), default_cpu = -1;
 	struct sched_domain *sd;
 
-	if (!idle_cpu(cpu) && is_housekeeping_cpu(cpu))
-		return cpu;
+	if (is_housekeeping_cpu(cpu)) {
+		if (!idle_cpu(cpu))
+			return cpu;
+		default_cpu = cpu;
+	}
 
 	rcu_read_lock();
 	for_each_domain(cpu, sd) {
-		for_each_cpu(i, sched_domain_span(sd)) {
+		for_each_cpu_and(i, sched_domain_span(sd),
+			housekeeping_cpumask()) {
 			if (cpu == i)
 				continue;
 
-			if (!idle_cpu(i) && is_housekeeping_cpu(i)) {
+			if (!idle_cpu(i)) {
 				cpu = i;
 				goto unlock;
 			}
 		}
 	}
 
-	if (!is_housekeeping_cpu(cpu))
-		cpu = housekeeping_any_cpu();
+	if (default_cpu == -1)
+		default_cpu = housekeeping_any_cpu();
+	cpu = default_cpu;
 unlock:
 	rcu_read_unlock();
 	return cpu;
@@ -1804,7 +1809,9 @@ static int __set_cpus_allowed_ptr(struct task_struct *p,
 
 	/* Don't allow perf-critical threads to have non-perf affinities */
 	if ((p->flags & PF_PERF_CRITICAL) && new_mask != cpu_lp_mask &&
-	    new_mask != cpu_perf_mask && new_mask != cpu_prime_mask)
+	    new_mask != cpu_perf_mask && new_mask != cpu_prime_mask &&
+	    new_mask != cpu_perf_first_mask && new_mask != cpu_perf_second_mask &&
+	    new_mask != cpu_perf_third_mask)
 		return -EINVAL;
 
 	rq = task_rq_lock(p, &rf);
@@ -2667,7 +2674,7 @@ void wake_up_if_idle(int cpu)
 	} else {
 		rq_lock_irqsave(rq, &rf);
 		if (is_idle_task(rq->curr))
-			smp_send_reschedule(cpu);
+			arch_send_wakeup_ipi_mask(cpumask_of(cpu));
 		/* Else CPU is not idle, do nothing here: */
 		rq_unlock_irqrestore(rq, &rf);
 	}
@@ -4945,17 +4952,17 @@ void set_user_nice(struct task_struct *p, long nice)
 	p->prio = effective_prio(p);
 	delta = p->prio - old_prio;
 
-	if (queued) {
+	if (queued)
 		enqueue_task(rq, p, ENQUEUE_RESTORE | ENQUEUE_NOCLOCK);
-		/*
-		 * If the task increased its priority or is running and
-		 * lowered its priority, then reschedule its CPU:
-		 */
-		if (delta < 0 || (delta > 0 && task_running(rq, p)))
-			resched_curr(rq);
-	}
 	if (running)
 		set_curr_task(rq, p);
+
+	/*
+	 * If the task increased its priority or is running and
+	 * lowered its priority, then reschedule its CPU:
+	 */
+	p->sched_class->prio_changed(rq, p, old_prio);
+
 out_unlock:
 	task_rq_unlock(rq, p, &rf);
 }
