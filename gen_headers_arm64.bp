@@ -37,7 +37,6 @@ gen_headers_out_arm64 = [
     "asm/types.h",
 
     // From include/uapi/**/*.h
-
     "asm-generic/auxvec.h",
     "asm-generic/bitsperlong.h",
     "asm-generic/errno-base.h",
@@ -202,6 +201,7 @@ gen_headers_out_arm64 = [
     "linux/esoc_ctrl.h",
     "linux/ethtool.h",
     "linux/eventpoll.h",
+    "linux/f2fs.h",
     "linux/fadvise.h",
     "linux/falloc.h",
     "linux/fanotify.h",
